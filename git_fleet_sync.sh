@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Clone missing repos and fast-forward existing ones for the authenticated GitHub user.
-# Usage: ./sync-all.sh [--forks] [--archived] [-j N]
+# Usage: ./git_fleet_sync.sh [--forks] [--archived] [-j N]
 set -euo pipefail
 
 JOBS=8

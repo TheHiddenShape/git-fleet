@@ -4,7 +4,7 @@ Keep a local copy of all your GitHub repositories in sync with a single command.
 
 ## How it works
 
-`sync-all.sh` detects your GitHub username from the `gh` login, lists your repositories, then processes them in parallel in the script's own directory:
+`git_fleet_sync.sh` detects your GitHub username from the `gh` login, lists your repositories, then processes them in parallel in the script's own directory:
 
 - **Missing repo** → cloned.
 - **Existing repo** → updated with `git pull --ff-only`.
@@ -21,7 +21,7 @@ Each repo gets one status line (`[cloned]`, `[ok]`, `[skipped]`, `[empty]` or `[
 ## Usage
 
 ```bash
-./sync-all.sh [--forks] [--archived] [-j N]
+./git_fleet_sync.sh [--forks] [--archived] [-j N]
 ```
 
 | Option       | Description                                    |
@@ -33,5 +33,5 @@ Each repo gets one status line (`[cloned]`, `[ok]`, `[skipped]`, `[empty]` or `[
 To sync another user or organization, set `OWNER`:
 
 ```bash
-OWNER=some-org ./sync-all.sh
+OWNER=some-org ./git_fleet_sync.sh
 ```
