@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# Clone missing repos and fast-forward existing ones for a GitHub owner.
+# Clone missing repos and fast-forward existing ones for the authenticated GitHub user.
 # Usage: ./sync-all.sh [--forks] [--archived] [-j N]
 set -euo pipefail
 
-OWNER="TheHiddenShape"
 JOBS=8
 FORKS=0
 ARCHIVED=0
@@ -17,6 +16,8 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+
+OWNER="${OWNER:-$(gh api user -q .login)}"
 
 FLAGS=()
 (( FORKS ))    || FLAGS+=(--source)
