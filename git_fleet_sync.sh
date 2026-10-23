@@ -25,42 +25,60 @@ FLAGS=()
 
 cd "$(dirname "$(readlink -f "$0")")"
 
+# Most relevant line of a git error output: the first fatal/error line, else the first line.
+git_error() {
+  grep -m1 -E '^(fatal|error|ERROR):' <<<"$1" || head -n1 <<<"$1"
+}
+
 sync_repo() {
-  local repo="$1" owner="$2"
+  local repo="$1" owner="$2" out
   if [[ ! -d "$repo/.git" ]]; then
-    if gh repo clone "$owner/$repo" "$repo" -- --quiet 2>/dev/null; then
-      echo "[cloned]  $repo"
+    if out=$(gh repo clone "$owner/$repo" "$repo" -- --quiet 2>&1); then
+      echo "[cloned]   $repo"
     else
-      echo "[ERROR]   $repo: clone failed"
+      echo "[ERROR]    $repo: clone failed: $(git_error "$out")"
     fi
     return
   fi
   if ! git -C "$repo" rev-parse -q --verify HEAD >/dev/null \
      && [[ -z "$(git -C "$repo" ls-remote --heads origin)" ]]; then
-    echo "[empty]   $repo: no commits on GitHub yet"
+    echo "[empty]    $repo: no commits on GitHub yet"
     return
   fi
   if [[ -n "$(git -C "$repo" status --porcelain)" ]]; then
-    echo "[skipped] $repo: uncommitted changes"
+    echo "[skipped]  $repo: uncommitted changes"
     return
   fi
-  local before
-  before=$(git -C "$repo" rev-parse -q --verify HEAD || true)
-  if out=$(git -C "$repo" pull --ff-only --quiet 2>&1); then
-    local ahead
-    ahead=$(git -C "$repo" rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)
-    if (( ahead > 0 )); then
-      echo "[ahead]   $repo: $ahead unpushed commit(s)"
-    elif [[ "$(git -C "$repo" rev-parse -q --verify HEAD || true)" != "$before" ]]; then
-      echo "[updated] $repo"
-    else
-      echo "[ok]      $repo"
-    fi
+  if ! git -C "$repo" symbolic-ref -q HEAD >/dev/null; then
+    echo "[ERROR]    $repo: detached HEAD"
+    return
+  fi
+  if ! out=$(git -C "$repo" fetch --prune --quiet 2>&1); then
+    echo "[ERROR]    $repo: fetch failed: $(git_error "$out")"
+    return
+  fi
+  if ! git -C "$repo" rev-parse -q --verify '@{u}' >/dev/null; then
+    echo "[ERROR]    $repo: branch $(git -C "$repo" branch --show-current) has no upstream on GitHub"
+    return
+  fi
+  # Commits only on the local branch / only on its upstream.
+  local local_only=0 remote_only=1
+  if git -C "$repo" rev-parse -q --verify HEAD >/dev/null; then
+    read -r local_only remote_only < <(git -C "$repo" rev-list --left-right --count 'HEAD...@{u}')
+  fi
+  if (( local_only > 0 && remote_only > 0 )); then
+    echo "[diverged] $repo: $local_only local, $remote_only remote commit(s)"
+  elif (( local_only > 0 )); then
+    echo "[ahead]    $repo: $local_only unpushed commit(s)"
+  elif (( remote_only == 0 )); then
+    echo "[ok]       $repo"
+  elif out=$(git -C "$repo" merge --ff-only --quiet '@{u}' 2>&1); then
+    echo "[updated]  $repo: $remote_only new commit(s)"
   else
-    echo "[ERROR]   $repo: ${out%%$'\n'*}"
+    echo "[ERROR]    $repo: $(git_error "$out")"
   fi
 }
-export -f sync_repo
+export -f git_error sync_repo
 
 gh repo list "$OWNER" --limit 1000 ${FLAGS[@]+"${FLAGS[@]}"} --json name -q '.[].name' \
   | xargs -P "$JOBS" -I{} bash -c 'sync_repo "$1" "$2"' _ {} "$OWNER" \
