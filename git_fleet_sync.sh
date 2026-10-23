@@ -44,8 +44,14 @@ sync_repo() {
     echo "[skipped] $repo: uncommitted changes"
     return
   fi
+  local before
+  before=$(git -C "$repo" rev-parse -q --verify HEAD || true)
   if out=$(git -C "$repo" pull --ff-only --quiet 2>&1); then
-    echo "[ok]      $repo"
+    if [[ "$(git -C "$repo" rev-parse -q --verify HEAD || true)" != "$before" ]]; then
+      echo "[updated] $repo"
+    else
+      echo "[ok]      $repo"
+    fi
   else
     echo "[ERROR]   $repo: ${out%%$'\n'*}"
   fi

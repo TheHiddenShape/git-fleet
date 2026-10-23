@@ -7,11 +7,11 @@ Keep a local copy of all your GitHub repositories in sync with a single command.
 `git_fleet_sync.sh` detects your GitHub username from the `gh` login, lists your repositories, then processes them in parallel in the script's own directory:
 
 - **Missing repo** → cloned.
-- **Existing repo** → updated with `git pull --ff-only`.
+- **Existing repo** → updated with `git pull --ff-only` (`[updated]` if new commits were pulled, `[ok]` if already up to date).
 - **Uncommitted local changes** → skipped, so no work is lost.
 - **Empty repo on GitHub** → reported and left alone.
 
-Each repo gets one status line (`[cloned]`, `[ok]`, `[skipped]`, `[empty]` or `[ERROR]`), and the output is grouped by status.
+Each repo gets one status line (`[cloned]`, `[updated]`, `[ok]`, `[skipped]`, `[empty]` or `[ERROR]`), and the output is grouped by status.
 
 ## Requirements
 
