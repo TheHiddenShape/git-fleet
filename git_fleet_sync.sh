@@ -47,7 +47,11 @@ sync_repo() {
   local before
   before=$(git -C "$repo" rev-parse -q --verify HEAD || true)
   if out=$(git -C "$repo" pull --ff-only --quiet 2>&1); then
-    if [[ "$(git -C "$repo" rev-parse -q --verify HEAD || true)" != "$before" ]]; then
+    local ahead
+    ahead=$(git -C "$repo" rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)
+    if (( ahead > 0 )); then
+      echo "[ahead]   $repo: $ahead unpushed commit(s)"
+    elif [[ "$(git -C "$repo" rev-parse -q --verify HEAD || true)" != "$before" ]]; then
       echo "[updated] $repo"
     else
       echo "[ok]      $repo"

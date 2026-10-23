@@ -8,10 +8,11 @@ Keep a local copy of all your GitHub repositories in sync with a single command.
 
 - **Missing repo** → cloned.
 - **Existing repo** → updated with `git pull --ff-only` (`[updated]` if new commits were pulled, `[ok]` if already up to date).
+- **Local commits not on GitHub** → reported as `[ahead]` with the number of unpushed commits on the current branch.
 - **Uncommitted local changes** → skipped, so no work is lost.
 - **Empty repo on GitHub** → reported and left alone.
 
-Each repo gets one status line (`[cloned]`, `[updated]`, `[ok]`, `[skipped]`, `[empty]` or `[ERROR]`), and the output is grouped by status.
+Each repo gets one status line (`[cloned]`, `[updated]`, `[ok]`, `[ahead]`, `[skipped]`, `[empty]` or `[ERROR]`), and the output is grouped by status.
 
 ## Requirements
 
